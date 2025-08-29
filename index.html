@@ -1,3 +1,6 @@
+<!-- python3 -m http.server 8000  -->
+<!-- http://localhost:8000/index.html -->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,10 +11,23 @@
     <!-- Incluir la librería y los estilos de Mapbox -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+    <!-- Geocoder CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
+    <!-- Geocoder JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+
 
     <style>
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        /* Asegurar que el buscador esté en la parte superior */
+        .mapboxgl-ctrl-geocoder {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50%;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
@@ -30,6 +46,23 @@
             center: [-74.5, -9.5], // Posición inicial [longitud, latitud]
             zoom: 4.5 // Nivel de zoom inicial
         });
+
+        // Añadir el control de navegación y mantener habilitado el zoom de scroll
+        map.addControl(new mapboxgl.NavigationControl());
+    
+        // Geocoder (buscador de direcciones)
+        const geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl
+        });
+        map.addControl(geocoder, 'top-left');
+
+
+
+
+
+
+
 
         // Función para generar colores aleatorios
         function getRandomColor() {
@@ -60,7 +93,8 @@
                     data.features.forEach(feature => {
                         const name = feature.properties.name;
                         if (!colorMap[name]) {
-                            colorMap[name] = getRandomColor();
+                            colorMap[name] = '#12f200';
+                            // colorMap[name] = getRandomColor();
                         }
                     });
 
@@ -70,12 +104,15 @@
                         'type': 'fill',
                         'source': 'geojson-data',
                         'paint': {
-                            'fill-color': [
-                                'match',
-                                ['get', 'name'],
-                                ...Object.entries(colorMap).flat(),
-                                '#888888' // Color por defecto
-                            ],
+                        'fill-color': [
+                            'case',
+                            ['==', ['get', 'station'], 'FC'], '#ADD8E5',      // 💙 Celeste si station == FC
+                            ['==', ['get', 'zona'], 'FRU'], '#893ae5',         //  morado si zona == FRU
+                            ['==', ['get', 'zona'], 'RU'], '#00FF00',          // 🟢 Verde si zona == RU
+                            '#85C440'                                          // ✅ Color por defecto si nada coincide
+                        ],
+
+
                             'fill-opacity': 0.3
                         }
                     });
@@ -88,7 +125,7 @@
                         'layout': {},
                         'paint': {
                             'line-color': '#000',
-                            'line-width': 1
+                            'line-width': 0.1
                         }
                     });
                 });
